@@ -8,14 +8,6 @@ date: "2024-04-14"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-###Introduction: This section introduces the purpose of the document, which is to provide a guide for RNA-seq data analysis using DESeq2.
-
-###Libraries Setup: It loads necessary libraries for the analysis, such as DESeq2 for differential expression analysis, ggplot2 for data visualization, and others.
-
-###DESeqDataSet Construction: This part constructs a DESeqDataSet object, which is a container for the count data and metadata required for DESeq2 analysis.
-
-
 ```{r}
 # Load required libraries
 suppressPackageStartupMessages({
@@ -65,7 +57,7 @@ rownames(metadata) <- metadata$Sample_name
 all.equal(rownames(metadata), colnames(count_data))  
 ```
 
-###DESeqDataSet Construction: This part constructs a DESeqDataSet object, which is a container for the count data and metadata required for DESeq2 analysis.
+# construct a DESeqDataSet
 
 ```{r}
 dds <- DESeqDataSetFromMatrix(countData = count_data,
@@ -76,10 +68,7 @@ dds
 names(colData(dds))
 ```
 
-
-
-###Pre-processing: It includes pre-processing steps such as pre-filtering to remove genes with zero counts to improve the accuracy of the analysis.
-
+# pre-filtering by removing zero counts genes
 
 ```{r}
 keep <- rowSums(counts(dds)) >= 1
@@ -89,7 +78,6 @@ dim(dds)
 ```
 
 # save the deseq2 object 
-
 ```{r}
 saveRDS(dds, "/Users/razi.m/MS_Bioinformatics/Year1/Spring_Semester_2024/Genome_analysis/genome_project_1/output/read_count/dds.rds")
 ```
@@ -128,21 +116,19 @@ head(assay(normCount), 5)
 hist(assay(normCount))
 
 ```
-
-### QC and Data Exploration: It includes quality control and data exploration steps such as variance-stabilizing transformation, heatmap, correlation plot, and principal component analysis (PCA) to understand the structure of the data.
+### heatmap based on top n normalized reads 
 ```{r}
-
 select <- order(rowMeans(counts(dds,normalized=TRUE)),
                 decreasing=TRUE)[1:20]
 df <- as.data.frame(colData(dds)[,c("Cultivar","Organ", "Tissue")])
 
-#heatmap
-pheatmap(assay(normCount)[select,], cluster_rows=FALSE, show_rownames=T,
-         cluster_cols=FALSE, annotation_col=df)
+pheatmap(assay(normCount)[select,], cluster_rows=TRUE, show_rownames=T,
+         cluster_cols=TRUE, annotation_col=df)
 
 ```
 
-###correlation plot
+
+
 
 ```{r}
 #correlation between the samples
@@ -157,7 +143,7 @@ pheatmap(cor1,clustering_distance_rows = as.dist(1- cor1),
 ```
 
 
-### principal component analysis (PCA) to understand the structure of the data.
+
 
 
 ```{r}
@@ -193,21 +179,7 @@ plot1 <- ggplot2::ggplot(pca_data1 , aes(x = PC1, y = PC2, color = Organ, shape 
 plot1
 
 ```
-###Differential Expression Results:
-Here, the results of the differential expression analysis are computed for two comparisons: "Organ_fruit_vs_non_fruit" and "Cultivar_Monthong_vs_Musang_King".
 
-###The analysis compares gene expression levels between different conditions or groups (e.g., fruit vs. non-fruit, Monthong cultivar vs. Musang King cultivar) to identify genes that are differentially expressed.
-These results typically include statistical measures such as log2 fold changes, adjusted p-values, and other metrics that indicate the significance and direction of gene expression changes.
-
-###Saving Results to CSV Files:
-Once the results are computed, they are saved as CSV (comma-separated values) files.
-Saving the results allows for easy access and sharing with collaborators or for further analysis using other tools or software.
-Each CSV file contains a tabular representation of the differential expression results, with rows representing individual genes and columns representing various statistical measures and annotations.
-
-###Counting Significantly Differentially Expressed Genes:
-After obtaining the results, it's common to assess the number of genes that are significantly differentially expressed.
-This assessment is typically based on a predefined threshold for adjusted p-values (e.g., p < 0.05), which helps determine the statistical significance of gene expression changes.
-Counting the significantly differentially expressed genes provides insight into the impact of the experimental conditions or factors being compared and helps prioritize genes for further investigation or validation.
 
 ```{r}
 res_org <- results(dds, name = "Organ_fruit_vs_non_fruit")
@@ -226,8 +198,21 @@ length(which(res_cult$padj < 0.05 ))
 
 ```
 
+### heatmap based on top n DEGs 
 
-###MA Plots: MA plots are created to visualize the log fold changes versus the mean of normalized counts for each gene, which helps to identify differentially expressed genes.
+```{r}
+
+resorg_sig <- res_org[which(res_org$padj < 0.05), ]
+
+s_up <- rownames(resorg_sig[order(resorg_sig$log2FoldChange, decreasing = T), ])[1:30]
+
+df_2 <- as.data.frame(colData(dds)[,c("Tissue", "Organ")])
+
+pheatmap(assay(normCount)[s_up,], cluster_rows=T, show_rownames=T,
+         cluster_cols=T, annotation_col=df_2)
+```
+
+
 
 ```{r}
 par(mfrow=c(1, 2))
@@ -239,7 +224,6 @@ plotMA(res_cult, ylim=c(-12,12),
        cex.main=0.9, cex.lab=0.8)
 ```
 
-###Gene Expression Visualization: Finally, gene expression is visualized using ggplot2 by plotting the log fold changes versus the -log10 of the adjusted p-values. Differentially expressed genes are highlighted in different colors based on their expression levels.
 
 
 ```{r}
@@ -278,7 +262,7 @@ ggplot(res_cult, aes(x = log2FoldChange, y = -log10(padj), color = Expression, l
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey") +  # Add horizontal cutoff line for padj
   theme(plot.title = element_text(hjust = 0.5)) 
 ```
-###Gene Expression Visualization: Finally, gene expression is visualized using ggplot2 by plotting the log fold changes versus the -log10 of the adjusted p-values. Differentially expressed genes are highlighted in different colors based on their expression levels.
+
 
 ```{r}
 
@@ -318,7 +302,6 @@ ggplot(res_org, aes(x = log2FoldChange, y = -log10(padj), color = Expression, la
 ```
 
 
-# Since eggnog did not provide any gene names, the “functional annotation eggNOG.mapper.annotations” file was used to get information on high or low-expression genes
 
 ```{r}
 
