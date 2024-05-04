@@ -105,7 +105,7 @@ resultsNames(dds)
 
 #### QC and data exploration 
 
-## performs a variance-stabilizing transformation on the count data stored in a DESeqDataSet (unbiased comparisons of samples)
+## performs a regularized log transformation on the count data stored in a DESeqDataSet (unbiased comparisons of samples)
 
 ```{r}
 
@@ -116,7 +116,9 @@ head(assay(normCount), 5)
 hist(assay(normCount))
 
 ```
+
 ### heatmap based on top n normalized reads 
+
 ```{r}
 select <- order(rowMeans(counts(dds,normalized=TRUE)),
                 decreasing=TRUE)[1:20]
@@ -144,7 +146,7 @@ pheatmap(cor1,clustering_distance_rows = as.dist(1- cor1),
 
 
 
-
+### PCA plot
 
 ```{r}
  #PCA plot for sampling_site
@@ -180,6 +182,7 @@ plot1
 
 ```
 
+#Differential expression analysis
 
 ```{r}
 res_org <- results(dds, name = "Organ_fruit_vs_non_fruit")
@@ -213,6 +216,7 @@ pheatmap(assay(normCount)[s_up,], cluster_rows=T, show_rownames=T,
 ```
 
 
+### Exploring and exporting results (MA plot)
 
 ```{r}
 par(mfrow=c(1, 2))
@@ -224,7 +228,7 @@ plotMA(res_cult, ylim=c(-12,12),
        cex.main=0.9, cex.lab=0.8)
 ```
 
-
+### Volcano plot for Cultivar_Monthong_vs_Musang_King
 
 ```{r}
 
@@ -263,6 +267,7 @@ ggplot(res_cult, aes(x = log2FoldChange, y = -log10(padj), color = Expression, l
   theme(plot.title = element_text(hjust = 0.5)) 
 ```
 
+### Volcano plot for Organ_fruit_vs_non_fruit
 
 ```{r}
 
