@@ -130,7 +130,7 @@ pheatmap(assay(normCount)[select,], cluster_rows=TRUE, show_rownames=T,
 ```
 
 
-
+### heatmap of correlation between samples based on transformed count data 
 
 ```{r}
 #correlation between the samples
@@ -146,7 +146,7 @@ pheatmap(cor1,clustering_distance_rows = as.dist(1- cor1),
 
 
 
-### PCA plot
+### PCA plot for Cultivar
 
 ```{r}
  #PCA plot for sampling_site
@@ -154,6 +154,7 @@ pca_cultivar <-plotPCA(normCount, intgroup= c("Cultivar"))
 pca_cultivar
 ```
 
+### PCA plot for Organ
 
 ```{r}
  #PCA plot for sampling_site
@@ -162,7 +163,7 @@ pca_cultivar
 ```
 
 
-
+### PCA plot for both "Organ" and "Cultivar"
 
 ```{r}
 
@@ -182,7 +183,7 @@ plot1
 
 ```
 
-#Differential expression analysis
+### Differential expression analysis
 
 ```{r}
 res_org <- results(dds, name = "Organ_fruit_vs_non_fruit")
