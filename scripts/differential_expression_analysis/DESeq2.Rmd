@@ -57,7 +57,7 @@ rownames(metadata) <- metadata$Sample_name
 all.equal(rownames(metadata), colnames(count_data))  
 ```
 
-# construct a DESeqDataSet
+### construct a DESeqDataSet
 
 ```{r}
 dds <- DESeqDataSetFromMatrix(countData = count_data,
@@ -68,7 +68,7 @@ dds
 names(colData(dds))
 ```
 
-# pre-filtering by removing zero counts genes
+### pre-filtering by removing zero counts genes
 
 ```{r}
 keep <- rowSums(counts(dds)) >= 1
@@ -77,12 +77,12 @@ dim(dds)
 
 ```
 
-# save the deseq2 object 
+### save the deseq2 object 
 ```{r}
 saveRDS(dds, "/Users/razi.m/MS_Bioinformatics/Year1/Spring_Semester_2024/Genome_analysis/genome_project_1/output/read_count/dds.rds")
 ```
 
-# load the object:
+### load the object:
 
 ```{r}
 # load the object:
@@ -90,7 +90,7 @@ dds <- readRDS("/Users/razi.m/MS_Bioinformatics/Year1/Spring_Semester_2024/Genom
 ```
 
 
-#fit a negative binomial generalized linear model to the count data stored in the DESeqDataSet object dds and check the  results of the differential expression analysis from the DESeqDataSet object 
+### fit a negative binomial generalized linear model to the count data stored in the DESeqDataSet object dds and check the  results of the differential expression analysis from the DESeqDataSet object 
 
 ```{r}
 design(dds)
