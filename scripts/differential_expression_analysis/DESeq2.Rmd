@@ -8,6 +8,8 @@ date: "2024-04-14"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Load the required libraries, read the count data and metadata, and prepare the count data for downstream analysis.
+
 ```{r}
 # Load required libraries
 suppressPackageStartupMessages({
@@ -39,6 +41,12 @@ print(rownames(count_data)[!grepl("_g", rownames(count_data))])
 
 count_data <- count_data[grep("_g", rownames(count_data)), ]
 
+# Extract numeric part from gene IDs in count data and change row names
+count_gene_ids <- gsub("^(\\d+)_g$", "g\\1", rownames(count_data))
+
+# Set row names in count data
+rownames(count_data) <- count_gene_ids
+
 dim(count_data)
 
 # Create header
@@ -55,6 +63,34 @@ rownames(metadata) <- metadata$Sample_name
 
 #to check if the rownames of metadata is equal to colnames of count data or not.
 all.equal(rownames(metadata), colnames(count_data))  
+```
+
+### read the annotation file and Set row names in count data to gene names where available, otherwise keep gene IDs
+
+```{r}
+
+annotations <- read.table("functional_annotation_eggNOG.emapper.annotations", comment='#', sep='\t', header=F, fill=TRUE)
+
+#make a coly of the original file
+modified_annotation <- annotations
+
+# Convert "-" to NA in column V21 of the annotation data
+# Convert "-" and incomplete gene names to NA in column V21 of the annotation data
+
+modified_annotation$V21[modified_annotation$V21 == "-" | grepl("^-.*", modified_annotation$V21)] <- NA
+
+
+# Match gene IDs from count data with gene IDs in annotation data
+matching_indices <- match(rownames(count_data), modified_annotation$V1)
+
+
+# Create gene names for count data based on matching gene IDs in annotation data
+gene_names <- ifelse(!is.na(matching_indices) & !is.na(modified_annotation$V21[matching_indices]), 
+                     modified_annotation$V21[matching_indices], 
+                     rownames(count_data))
+
+# Set row names in count data to gene names where available, otherwise keep gene IDs
+rownames(count_data) <- gene_names
 ```
 
 ### construct a DESeqDataSet
@@ -125,7 +161,7 @@ select <- order(rowMeans(counts(dds,normalized=TRUE)),
 df <- as.data.frame(colData(dds)[,c("Cultivar","Organ", "Tissue")])
 
 pheatmap(assay(normCount)[select,], cluster_rows=TRUE, show_rownames=T,
-         cluster_cols=TRUE, annotation_col=df)
+         cluster_cols=TRUE, annotation_col=df, fontsize = 10 )
 
 ```
 
@@ -213,7 +249,7 @@ s_up <- rownames(resorg_sig[order(resorg_sig$log2FoldChange, decreasing = T), ])
 df_2 <- as.data.frame(colData(dds)[,c("Tissue", "Organ")])
 
 pheatmap(assay(normCount)[s_up,], cluster_rows=T, show_rownames=T,
-         cluster_cols=T, annotation_col=df_2)
+         cluster_cols=T, annotation_col=df_2, fontsize = 10)
 ```
 
 
@@ -309,11 +345,4 @@ ggplot(res_org, aes(x = log2FoldChange, y = -log10(padj), color = Expression, la
 
 
 
-```{r}
-
-
-annotations <- read.table("functional_annotation_eggNOG.emapper.annotations", comment='#', sep='\t', header=F, fill=TRUE)
-
-
-```
 
